@@ -23,6 +23,14 @@ type Address struct {
 var people []Person
 
 func GetPersonEndPoint(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
+	for _, item := range people {
+		if item.ID == params["id"] {
+			json.NewEncoder(writer).Encode(item)
+			return
+		}
+	}
+	json.NewEncoder(writer).Encode(&Person{})
 
 }
 
