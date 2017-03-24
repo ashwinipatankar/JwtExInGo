@@ -59,14 +59,25 @@ func DeletePersonEndPoint(writer http.ResponseWriter, request *http.Request) {
 	}
 	json.NewEncoder(writer).Encode(people)
 }
-func main() {
+
+func GetLoginPage(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "login.html")
+}
+
+func startServer() {
 	router := mux.NewRouter()
-	people = append(people, Person{ID: "1", Firstname: "Ashwini", Lastname: "Patankar", Address: &Address{City: "Hyderanad", State: "India"}})
-	people = append(people, Person{ID: "2", Firstname: "Manish", Address: &Address{City: "Bangalore", State: "India"}})
-	people = append(people, Person{ID: "3", Firstname: "John"})
+	router.HandleFunc("/", GetLoginPage).Methods("GET")
 	router.HandleFunc("/people", GetPeopleEndPoint).Methods("GET")
 	router.HandleFunc("/people/{id}", GetPersonEndPoint).Methods("GET")
 	router.HandleFunc("/people/{id}", CreatePersonEndPoint).Methods("POST")
 	router.HandleFunc("/people/{id}", DeletePersonEndPoint).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":12345", router))
+}
+func main() {
+
+	people = append(people, Person{ID: "1", Firstname: "Ashwini", Lastname: "Patankar", Address: &Address{City: "Hyderanad", State: "India"}})
+	people = append(people, Person{ID: "2", Firstname: "Manish", Address: &Address{City: "Bangalore", State: "India"}})
+	people = append(people, Person{ID: "3", Firstname: "John"})
+
+	startServer()
 }
