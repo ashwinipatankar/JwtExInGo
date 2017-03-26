@@ -2,12 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
+type userCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 type Person struct {
 	ID        string   `json:"id, omitempty"`
 	Firstname string   `json:"firstname, omitempty"`
@@ -64,9 +69,19 @@ func GetLoginPage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
 }
 
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var user userCredentials
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintf(w, "Unauthorized access request / Error in Request")
+		return
+	}
+}
 func startServer() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", GetLoginPage).Methods("GET")
+	router.HandleFunc("/login", LoginHandler).Methods("GET")
 	router.HandleFunc("/people", GetPeopleEndPoint).Methods("GET")
 	router.HandleFunc("/people/{id}", GetPersonEndPoint).Methods("GET")
 	router.HandleFunc("/people/{id}", CreatePersonEndPoint).Methods("POST")
