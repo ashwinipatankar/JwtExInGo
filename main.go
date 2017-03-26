@@ -73,11 +73,15 @@ func startServer() {
 	router.HandleFunc("/people/{id}", DeletePersonEndPoint).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":12345", router))
 }
-func main() {
+
+func initData() {
 
 	people = append(people, Person{ID: "1", Firstname: "Ashwini", Lastname: "Patankar", Address: &Address{City: "Hyderanad", State: "India"}})
 	people = append(people, Person{ID: "2", Firstname: "Manish", Address: &Address{City: "Bangalore", State: "India"}})
 	people = append(people, Person{ID: "3", Firstname: "John"})
+}
+func main() {
 
+	initData()
 	startServer()
 }
