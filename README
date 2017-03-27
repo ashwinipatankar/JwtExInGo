@@ -5,6 +5,11 @@ References and Inspiration:
 2. https://www.youtube.com/watch?v=dgJFeqeXVKw             ||JWT||
 3. https://www.youtube.com/watch?v=t96hBT53S4U              ||REST Server||
 
+
+Dependencies:
+1. go get github.com/dgrijalva/jwt-go
+2. go get github.com/gorilla/mux
+3. go get github.com/codegangsta/negroni
 ToDo:
 
 There are many todos left, but the major ones are:
