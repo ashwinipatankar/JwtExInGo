@@ -77,11 +77,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Unauthorized access request / Error in Request")
 		return
 	}
+	fmt.Println(user.Username, user.Password)
+
+	//Integrate with Database
+	if user.Username != "admin" || user.Password != "password" {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintf(w, "username/password doesnt match")
+		fmt.Println("Error logging in because of username/password")
+		return
+	}
 }
 func startServer() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", GetLoginPage).Methods("GET")
-	router.HandleFunc("/login", LoginHandler).Methods("GET")
+	router.HandleFunc("/login", LoginHandler).Methods("POST")
 	router.HandleFunc("/people", GetPeopleEndPoint).Methods("GET")
 	router.HandleFunc("/people/{id}", GetPersonEndPoint).Methods("GET")
 	router.HandleFunc("/people/{id}", CreatePersonEndPoint).Methods("POST")
