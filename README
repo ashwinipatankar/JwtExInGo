@@ -1,1 +1,12 @@
 JSON Web Token Example in GoLang
+
+References and Inspiration:
+1. https://gist.github.com/corvinusy/8313bd754c15ee9a8c61034641558c0c  ||JWT||
+2. https://www.youtube.com/watch?v=dgJFeqeXVKw             ||JWT||
+3. https://www.youtube.com/watch?v=t96hBT53S4U              ||REST Server||
+
+ToDo:
+
+There are many todos left, but the major ones are:
+1. Add a front end
+2. Add a data base
