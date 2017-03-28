@@ -1,4 +1,4 @@
-JSON Web Token Example in GoLang
+JSON Web Token Example in GoLang. Development follows "LDD" and "IDD" -- Learning Driven Development, and Idea Driven Development methodology
 
 References and Inspiration:
 1. https://gist.github.com/corvinusy/8313bd754c15ee9a8c61034641558c0c  ||JWT||
@@ -7,11 +7,13 @@ References and Inspiration:
 
 
 Dependencies:
-1. go get github.com/dgrijalva/jwt-go
+1. go get github.com/dgrijalva/jwt-go ||Need to be replaced||
 2. go get github.com/gorilla/mux
 3. go get github.com/codegangsta/negroni
 ToDo:
 
 There are many todos left, but the major ones are:
+0. Add logging
 1. Add a front end
 2. Add a data base
+3. Rearrange the code
