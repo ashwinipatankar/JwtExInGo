@@ -1,177 +1,111 @@
 package main
 
 import (
-	"bytes"
-	cryptorand "crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 
-	"github.com/gorilla/mux"
+	"github.com/codegangsta/negroni"
 )
 
-type userCredentials struct {
+//RSA Keys and Initialisation
+
+const (
+	privateKeyPath = "keys/app.rsa"
+	publicKeyPath  = "keys/app.rsa.pub"
+)
+
+var VerifyKey, SignKey []byte
+
+func initKeys() {
+	var err error
+
+	SignKey, err = ioutil.ReadFile(privateKeyPath)
+	if err != nil {
+		log.Fatal("Error reading private key")
+		return
+	}
+
+	VerifyKey, err = ioutil.ReadFile(publicKeyPath)
+	if err != nil {
+		log.Fatal("Error reading public key")
+		return
+	}
+}
+
+//Struct Definitions
+type UserCredentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
-type Person struct {
-	ID        string   `json:"id, omitempty"`
-	Firstname string   `json:"firstname, omitempty"`
-	Lastname  string   `json:"lastname, omitempty"`
-	Address   *Address `json:"address, omitempty"`
+
+type User struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
-type Address struct {
-	City  string `json:"city, omitempty"`
-	State string `json:"state, omitempty"`
-}
+//Server Entry Point
+func StartServer() {
+	//Public Endpoints
+	http.HandleFunc("/login", LoginHandler)
 
-var people []Person
+	//Protected Endpoints
+	http.Handle("/resource/", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(ProtectedHandler))))
 
-var signingKey, verificationKey []byte
+	log.Println("Now listening...")
 
-func intiKeys() {
-	var (
-		err         error
-		privKey     *rsa.PrivateKey
-		pubKey      *rsa.PublicKey
-		pubKeyBytes []byte
-	)
+	//handle server interrupts
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
 
-	privKey, err = rsa.GenerateKey(cryptorand.Reader, 2048)
-	if err != nil {
-		log.Fatal("Error generating private key")
-	}
-	pubKey = &privKey.PublicKey
+	go func() {
+		<-c
+		log.Println("Stopping Server ...")
+		os.Exit(1)
+	}()
 
-	//Create signingkey from priv key
-	//Prepare PEM block
-	var privPEMBlock = &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(privKey), //Marshal means searlize
-	}
-
-	//serialize pem
-	privKeyPEMBuffer := new(bytes.Buffer)
-	pem.Encode(privKeyPEMBuffer, privPEMBlock)
-
-	//done
-	signingKey = privKeyPEMBuffer.Bytes()
-
-	fmt.Println(string(signingKey))
-
-	//create verificationKey from pubKey, Also in PEM-format
-	pubKeyBytes, err = x509.MarshalPKIXPublicKey(pubKey)
-	if err != nil {
-		log.Fatal("Error marshalling public key")
-	}
-
-	var pubPEMBlock = &pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: pubKeyBytes,
-	}
-
-	pubKeyPEMBuffer := new(bytes.Buffer)
-	pem.Encode(pubKeyPEMBuffer, pubPEMBlock)
-
-	//done
-	verificationKey = pubKeyPEMBuffer.Bytes()
-
-	fmt.Println(string(verificationKey))
+	http.ListenAndServe(":8000", nil)
 
 }
-
-func GetPersonEndPoint(writer http.ResponseWriter, request *http.Request) {
-	params := mux.Vars(request)
-	for _, item := range people {
-		if item.ID == params["id"] {
-			json.NewEncoder(writer).Encode(item)
-			return
-		}
-	}
-	json.NewEncoder(writer).Encode(&Person{})
-
+func main() {
+	initKeys()
+	StartServer()
 }
 
-func GetPeopleEndPoint(writer http.ResponseWriter, request *http.Request) {
-	json.NewEncoder(writer).Encode(people)
+//EndPoint Handlers
 
-}
-
-func CreatePersonEndPoint(writer http.ResponseWriter, request *http.Request) {
-	params := mux.Vars(request)
-	var person Person
-	_ = json.NewDecoder(request.Body).Decode(&person)
-	person.ID = params["id"]
-	people = append(people, person)
-	json.NewEncoder(writer).Encode(people)
-
-}
-
-func DeletePersonEndPoint(writer http.ResponseWriter, request *http.Request) {
-	params := mux.Vars(request)
-	for index, item := range people {
-		if item.ID == params["id"] {
-			people = append(people[:index], people[index+1:]...)
-			break
-		}
-	}
-	json.NewEncoder(writer).Encode(people)
-}
-
-func GetLoginPage(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "login.html")
+func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
+	response := Response{"Gained access to protected resource"}
+	JsonResponse(response, w)
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user userCredentials
+	var user UserCredentials
+
+	//decode request into user credentials struct
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "Unauthorized access request / Error in Request")
+		fmt.Fprintf(w, "Error in request")
 		return
 	}
+
 	fmt.Println(user.Username, user.Password)
 
-	//Integrate with Database
-	if user.Username != "admin" || user.Password != "password" {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "username/password doesnt match")
-		fmt.Println("Error logging in because of username/password")
-		return
+	//Validate user credentials
+	if strings.ToLower(user.Username) != "admin" {
+		if user.Password != "password" {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Println("Error logging in")
+			fmt.Fprint(w, "Invalid credentials")
+			return
+		}
 	}
-
-	//Create a rsa 256 signer
-	//TODO: Add support to other ways by configuration file
-	//signer := jwt.New(jwt.SigningMethodRS256)
-
-	//set claims
-	//things are broken by this, time to change the library
-
-}
-func startServer() {
-	router := mux.NewRouter()
-	router.HandleFunc("/", GetLoginPage).Methods("GET")
-	router.HandleFunc("/login", LoginHandler).Methods("POST")
-	router.HandleFunc("/people", GetPeopleEndPoint).Methods("GET")
-	router.HandleFunc("/people/{id}", GetPersonEndPoint).Methods("GET")
-	router.HandleFunc("/people/{id}", CreatePersonEndPoint).Methods("POST")
-	router.HandleFunc("/people/{id}", DeletePersonEndPoint).Methods("DELETE")
-	log.Fatal(http.ListenAndServe(":12345", router))
-}
-
-func initData() {
-
-	people = append(people, Person{ID: "1", Firstname: "Ashwini", Lastname: "Patankar", Address: &Address{City: "Hyderanad", State: "India"}})
-	people = append(people, Person{ID: "2", Firstname: "Manish", Address: &Address{City: "Bangalore", State: "India"}})
-	people = append(people, Person{ID: "3", Firstname: "John"})
-}
-func main() {
-
-	initData()
-	startServer()
 }
