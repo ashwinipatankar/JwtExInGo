@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,8 +11,10 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/codegangsta/negroni"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 //RSA Keys and Initialisation
@@ -21,18 +24,30 @@ const (
 	publicKeyPath  = "keys/app.rsa.pub"
 )
 
-var VerifyKey, SignKey []byte
+var (
+	VerifyKey *rsa.PublicKey
+	SignKey   *rsa.PrivateKey
+)
 
 func initKeys() {
-	var err error
+	signKeyBytes, err := ioutil.ReadFile(privateKeyPath)
+	if err != nil {
+		log.Fatal("Error reading private key file")
+		return
+	}
 
-	SignKey, err = ioutil.ReadFile(privateKeyPath)
+	SignKey, err = jwt.ParseRSAPrivateKeyFromPEM(signKeyBytes)
 	if err != nil {
 		log.Fatal("Error reading private key")
 		return
 	}
 
-	VerifyKey, err = ioutil.ReadFile(publicKeyPath)
+	verifyKeyBytes, err := ioutil.ReadFile(publicKeyPath)
+	if err != nil {
+		log.Fatal("error reading public key file")
+	}
+
+	VerifyKey, err = jwt.ParseRSAPublicKeyFromPEM(verifyKeyBytes)
 	if err != nil {
 		log.Fatal("Error reading public key")
 		return
@@ -46,8 +61,25 @@ type UserCredentials struct {
 }
 
 type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type Response struct {
+	Data string `json:"data"`
+}
+
+type Token struct {
+	Token string `json:"token"`
+}
+
+//App claims provide custom claim for JWt
+type AppClaims struct {
+	UserName string `json:"username"`
+	Role     string `json:"role"`
+	jwt.StandardClaims
 }
 
 //Server Entry Point
@@ -100,12 +132,37 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user.Username, user.Password)
 
 	//Validate user credentials
-	if strings.ToLower(user.Username) != "admin" {
-		if user.Password != "password" {
+	if strings.Compare(strings.ToLower(user.Username), "admin") != 0 {
+		if strings.Compare(user.Password, "password") != 0 {
 			w.WriteHeader(http.StatusForbidden)
 			fmt.Println("Error logging in")
 			fmt.Fprint(w, "Invalid credentials")
 			return
 		}
 	}
+
+	//Create claims
+	claims := AppClaims{user.Username, "Member", jwt.StandardClaims{
+		ExpiresAt: time.Now().Add(time.Minute * 20).Unix(),
+		Issuer:    "admin",
+	}}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	tokenString, err := token.SignedString(SignKey)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error while signing the token")
+		log.Printf("Error Signing token %v\n", err)
+	}
+
+	//create a token instance using the token string
+	response := Token{tokenString}
+	JsonResponse(response, w)
+
+}
+
+//Helper Function
+func JsonResponse(response interface{}, w http.ResponseWriter) {
+
 }
