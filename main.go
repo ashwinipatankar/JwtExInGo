@@ -15,13 +15,14 @@ import (
 
 	"github.com/codegangsta/negroni"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 )
 
 //RSA Keys and Initialisation
 
 const (
-	privateKeyPath = "keys/app.rsa"
-	publicKeyPath  = "keys/app.rsa.pub"
+	privateKeyPath = "key/app.rsa"
+	publicKeyPath  = "key/app.rsa.pub"
 )
 
 var (
@@ -160,6 +161,24 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	response := Token{tokenString}
 	JsonResponse(response, w)
 
+}
+func ValidateTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+
+	token, err := request.ParseFromRequestWithClaims(r, request.OAuth2Extractor, &AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return VerifyKey, nil
+	})
+
+	if err != nil {
+		if token.Valid {
+			next(w, r)
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(w, "Token is not valid")
+		}
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, "Unauthorised access to this resource")
+	}
 }
 
 //Helper Function
