@@ -168,7 +168,7 @@ func ValidateTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.H
 		return VerifyKey, nil
 	})
 
-	if err != nil {
+	if err == nil {
 		if token.Valid {
 			next(w, r)
 		} else {
