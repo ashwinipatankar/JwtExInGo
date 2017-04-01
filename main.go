@@ -105,6 +105,8 @@ func StartServer() {
 	//Protected Endpoints
 	http.Handle("/resource/", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(ProtectedHandler))))
 
+	http.HandleFunc("/people/", GetPeopleEndPoint) //Non protected for testing
+
 	log.Println("Now listening...")
 
 	//handle server interrupts
@@ -134,7 +136,10 @@ func main() {
 }
 
 //EndPoint Handlers
-
+func GetPeopleEndPoint(w http.ResponseWriter, r *http.Request) {
+	response := Response{"List of all People"}
+	JsonResponse(response, w)
+}
 func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
 	response := Response{"Gained access to protected resource"}
 	JsonResponse(response, w)
