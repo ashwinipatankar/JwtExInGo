@@ -100,6 +100,8 @@ type AppClaims struct {
 //Server Entry Point
 func StartServer() {
 	//Public Endpoints
+
+	http.HandleFunc("/", GetLoginPage)
 	http.HandleFunc("/login", LoginHandler)
 
 	//Protected Endpoints
@@ -138,6 +140,10 @@ func main() {
 //EndPoint Handlers
 func GetPeopleEndPoint(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(people)
+}
+
+func GetLoginPage(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "login.html")
 }
 func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
 	response := Response{"Gained access to protected resource"}
