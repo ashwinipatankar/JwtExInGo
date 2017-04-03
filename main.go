@@ -97,6 +97,11 @@ type AppClaims struct {
 	jwt.StandardClaims
 }
 
+func NotImplemented(w http.ResponseWriter, r *http.Request) {
+	response := Response{"Not yet implemented"}
+	JsonResponse(response, w)
+}
+
 //Server Entry Point
 func StartServer() {
 	//Public Endpoints
@@ -108,6 +113,11 @@ func StartServer() {
 	http.Handle("/resource/", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(ProtectedHandler))))
 
 	http.Handle("/people", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(GetPeopleEndPoint))))
+
+	//Not yet implemented
+	http.HandleFunc("/people/{id}", NotImplemented) //GetPersonEndPoint
+	//http.Handle("/people/{id}", NotImplemented) //CreatePersonEndpoint
+	//http.Handle("/people/{id}", NotImplemented) //DeletePersonEndpoint
 
 	log.Println("Now listening...")
 
