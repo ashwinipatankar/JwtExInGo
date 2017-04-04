@@ -16,6 +16,8 @@ import (
 	"github.com/codegangsta/negroni"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 //RSA Keys and Initialisation
@@ -104,8 +106,10 @@ func NotImplemented(w http.ResponseWriter, r *http.Request) {
 
 //Server Entry Point
 func StartServer() {
-	//Public Endpoints
+	r := mux.NewRouter()
 
+	//Public Endpoints
+	r.Handle("/", GetLoginPageHandler).Methods("GET")
 	http.HandleFunc("/", GetLoginPage)
 	http.HandleFunc("/login", LoginHandler)
 
@@ -132,7 +136,7 @@ func StartServer() {
 		os.Exit(1)
 	}()
 
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 
 }
 
@@ -151,6 +155,10 @@ func main() {
 func GetPeopleEndPoint(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(people)
 }
+
+var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "login.html")
+})
 
 func GetLoginPage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
