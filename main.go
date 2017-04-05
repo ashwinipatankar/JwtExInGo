@@ -110,7 +110,7 @@ func StartServer() {
 
 	//Public Endpoints
 	r.Handle("/", GetLoginPageHandler).Methods("GET")
-	http.HandleFunc("/", GetLoginPage)
+	r.Handle("/login", LoginHandler).Methods("POST")
 	http.HandleFunc("/login", LoginHandler)
 
 	//Protected Endpoints
@@ -168,7 +168,8 @@ func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
 	JsonResponse(response, w)
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 	var user UserCredentials
 
 	//decode request into user credentials struct
@@ -210,7 +211,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	response := Token{tokenString}
 	JsonResponse(response, w)
 
-}
+})
+
 func ValidateTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	token, err := request.ParseFromRequestWithClaims(r, request.OAuth2Extractor, &AppClaims{}, func(token *jwt.Token) (interface{}, error) {
