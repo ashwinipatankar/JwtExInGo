@@ -14,7 +14,6 @@ import (
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/codegangsta/negroni"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gorilla/handlers"
@@ -116,8 +115,8 @@ func StartServer() {
 	//Protected Endpoints
 	r.Handle("/resource", ValidateToken.Handler(ProtectedHandler)).Methods("GET")
 	//http.Handle("/resource/", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(ProtectedHandler))))
-
-	http.Handle("/people", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(GetPeopleEndPoint))))
+	r.Handle("/people", ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
+	//http.Handle("/people", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(GetPeopleEndPoint))))
 
 	//Not yet implemented
 	http.HandleFunc("/people/{id}", NotImplemented) //GetPersonEndPoint
@@ -160,9 +159,9 @@ var ValidateToken = jwtmiddleware.New(jwtmiddleware.Options{
 	SigningMethod: jwt.SigningMethodRS256,
 })
 
-func GetPeopleEndPoint(w http.ResponseWriter, r *http.Request) {
+var GetPeopleEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(people)
-}
+})
 
 var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
