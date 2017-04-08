@@ -114,16 +114,10 @@ func StartServer() {
 
 	//Protected Endpoints
 	r.Handle("/resource", ValidateToken.Handler(ProtectedHandler)).Methods("GET")
-	//http.Handle("/resource/", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(ProtectedHandler))))
 	r.Handle("/people", ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
 
-	//http.Handle("/people", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(GetPeopleEndPoint))))
-
 	//Not yet implemented
-	http.HandleFunc("/people/{id}", NotImplemented) //GetPersonEndPoint
-	//http.Handle("/people/{id}", NotImplemented) //CreatePersonEndpoint
-	//http.Handle("/people/{id}", NotImplemented) //DeletePersonEndpoint
 
 	log.Println("Now listening...")
 
@@ -139,7 +133,6 @@ func StartServer() {
 	}()
 
 	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
-
 }
 
 func initData() {
@@ -178,10 +171,6 @@ var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *h
 var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
 })
-
-func GetLoginPage(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "login.html")
-}
 
 var ProtectedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	response := Response{"Gained access to protected resource"}
