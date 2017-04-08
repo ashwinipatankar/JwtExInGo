@@ -116,6 +116,8 @@ func StartServer() {
 	r.Handle("/resource", ValidateToken.Handler(ProtectedHandler)).Methods("GET")
 	//http.Handle("/resource/", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(ProtectedHandler))))
 	r.Handle("/people", ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
+	r.Handle("/people/{id}", ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
+
 	//http.Handle("/people", negroni.New(negroni.HandlerFunc(ValidateTokenMiddleware), negroni.Wrap(http.HandlerFunc(GetPeopleEndPoint))))
 
 	//Not yet implemented
@@ -162,7 +164,17 @@ var ValidateToken = jwtmiddleware.New(jwtmiddleware.Options{
 var GetPeopleEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(people)
 })
+var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	for _, item := range people {
+		if item.ID == params["id"] {
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Person{})
 
+})
 var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
 })
