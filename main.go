@@ -116,7 +116,7 @@ func StartServer() {
 	r.Handle("/resource", ValidateToken.Handler(ProtectedHandler)).Methods("GET")
 	r.Handle("/people", ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
-
+	r.Handle("/people/{id}", ValidateToken.Handler(CreatePersonEndPointHandler)).Methods("POST")
 	//Not yet implemented
 
 	log.Println("Now listening...")
@@ -166,6 +166,15 @@ var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *h
 		}
 	}
 	json.NewEncoder(w).Encode(&Person{})
+
+})
+var CreatePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var person Person
+	_ = json.NewDecoder(r.Body).Decode(&person)
+	person.ID = params["id"]
+	people = append(people, person)
+	json.NewEncoder(w).Encode(people)
 
 })
 var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
