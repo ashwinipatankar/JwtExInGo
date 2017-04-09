@@ -19,3 +19,12 @@ There are many todos left, but the major ones are:
 1. Add a front end
 2. Add a data base
 3. Rearrange the code
+
+
+TODOs:
+0. Fix key generation
+1. remove the dead and unused code
+2. extract the middle ware, and split it in files
+3. Add mongo db interface
+4. Add a small frontend
+5. Create a seperate identity management server
