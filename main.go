@@ -15,7 +15,6 @@ import (
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -99,11 +98,6 @@ type AppClaims struct {
 	jwt.StandardClaims
 }
 
-func NotImplemented(w http.ResponseWriter, r *http.Request) {
-	response := Response{"Not yet implemented"}
-	JsonResponse(response, w)
-}
-
 //Server Entry Point
 func StartServer() {
 	r := mux.NewRouter()
@@ -113,13 +107,11 @@ func StartServer() {
 	r.Handle("/login", LoginHandler).Methods("POST")
 
 	//Protected Endpoints
-	r.Handle("/resource", ValidateToken.Handler(ProtectedHandler)).Methods("GET")
+
 	r.Handle("/people", ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", ValidateToken.Handler(CreatePersonEndPointHandler)).Methods("POST")
 	r.Handle("/people/{id}", ValidateToken.Handler(DeletePersonEndPointHandler)).Methods("DELETE")
-
-	//Not yet implemented
 
 	log.Println("Now listening...")
 
@@ -142,13 +134,14 @@ func initData() {
 	people = append(people, Person{ID: "2", Firstname: "Manish", Lastname: "Patankar", Address: &Address{City: "San Fransico", State: "California"}})
 	people = append(people, Person{ID: "3", Firstname: "Hun", Lastname: "Patankar", Address: &Address{City: "Munich", State: "Germany"}})
 }
+
 func main() {
 	initKeys()
 	initData()
 	StartServer()
 }
 
-//EndPoint Handlers
+//MiddleWare
 var ValidateToken = jwtmiddleware.New(jwtmiddleware.Options{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 		return VerifyKey, nil
@@ -156,9 +149,11 @@ var ValidateToken = jwtmiddleware.New(jwtmiddleware.Options{
 	SigningMethod: jwt.SigningMethodRS256,
 })
 
+//Endpoints
 var GetPeopleEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(people)
 })
+
 var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	for _, item := range people {
@@ -170,6 +165,7 @@ var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *h
 	json.NewEncoder(w).Encode(&Person{})
 
 })
+
 var CreatePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var person Person
@@ -190,13 +186,9 @@ var DeletePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r
 	}
 	json.NewEncoder(w).Encode(people)
 })
+
 var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
-})
-
-var ProtectedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	response := Response{"Gained access to protected resource"}
-	JsonResponse(response, w)
 })
 
 var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -243,25 +235,6 @@ var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)
 	JsonResponse(response, w)
 
 })
-
-func ValidateTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-
-	token, err := request.ParseFromRequestWithClaims(r, request.OAuth2Extractor, &AppClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return VerifyKey, nil
-	})
-
-	if err == nil {
-		if token.Valid {
-			next(w, r)
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprint(w, "Token is not valid")
-		}
-	} else {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprint(w, "Unauthorised access to this resource")
-	}
-}
 
 //Helper Function
 func JsonResponse(response interface{}, w http.ResponseWriter) {
