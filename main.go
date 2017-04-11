@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ashwinipatankar/JwtExInGo/authentication"
+	handler "github.com/ashwinipatankar/JwtExInGo/handlers"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -64,7 +65,7 @@ func StartServer() {
 	r := mux.NewRouter()
 
 	//Public Endpoints
-	r.Handle("/", GetLoginPageHandler).Methods("GET")
+	r.Handle("/", handler.GetLoginPageHandler).Methods("GET")
 	r.Handle("/login", LoginHandler).Methods("POST")
 
 	//Protected Endpoints
@@ -140,10 +141,11 @@ var DeletePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r
 	json.NewEncoder(w).Encode(people)
 })
 
+/*
 var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
 })
-
+*/
 var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	var user UserCredentials
