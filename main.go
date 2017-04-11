@@ -1,10 +1,8 @@
 package main
 
 import (
-	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,48 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/ashwinipatankar/JwtExInGo/authentication"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
-
-//RSA Keys and Initialisation
-
-const (
-	privateKeyPath = "key/app.rsa"
-	publicKeyPath  = "key/app.rsa.pub"
-)
-
-var (
-	VerifyKey *rsa.PublicKey
-	SignKey   *rsa.PrivateKey
-)
-
-func initKeys() {
-	signKeyBytes, err := ioutil.ReadFile(privateKeyPath)
-	if err != nil {
-		log.Fatal("Error reading private key file")
-		return
-	}
-
-	SignKey, err = jwt.ParseRSAPrivateKeyFromPEM(signKeyBytes)
-	if err != nil {
-		log.Fatal("Error reading private key")
-		return
-	}
-
-	verifyKeyBytes, err := ioutil.ReadFile(publicKeyPath)
-	if err != nil {
-		log.Fatal("error reading public key file")
-	}
-
-	VerifyKey, err = jwt.ParseRSAPublicKeyFromPEM(verifyKeyBytes)
-	if err != nil {
-		log.Fatal("Error reading public key")
-		return
-	}
-}
 
 //Struct Definitions
 type UserCredentials struct {
@@ -108,10 +69,10 @@ func StartServer() {
 
 	//Protected Endpoints
 
-	r.Handle("/people", ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
-	r.Handle("/people/{id}", ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
-	r.Handle("/people/{id}", ValidateToken.Handler(CreatePersonEndPointHandler)).Methods("POST")
-	r.Handle("/people/{id}", ValidateToken.Handler(DeletePersonEndPointHandler)).Methods("DELETE")
+	r.Handle("/people", authentication.ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
+	r.Handle("/people/{id}", authentication.ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
+	r.Handle("/people/{id}", authentication.ValidateToken.Handler(CreatePersonEndPointHandler)).Methods("POST")
+	r.Handle("/people/{id}", authentication.ValidateToken.Handler(DeletePersonEndPointHandler)).Methods("DELETE")
 
 	log.Println("Now listening...")
 
@@ -136,18 +97,10 @@ func initData() {
 }
 
 func main() {
-	initKeys()
+	authentication.InitKeys()
 	initData()
 	StartServer()
 }
-
-//MiddleWare
-var ValidateToken = jwtmiddleware.New(jwtmiddleware.Options{
-	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-		return VerifyKey, nil
-	},
-	SigningMethod: jwt.SigningMethodRS256,
-})
 
 //Endpoints
 var GetPeopleEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -222,7 +175,7 @@ var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)
 	}}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	tokenString, err := token.SignedString(SignKey)
+	tokenString, err := token.SignedString(authentication.GetSignKey)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
