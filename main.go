@@ -2,28 +2,25 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
-	"time"
 
 	"github.com/ashwinipatankar/JwtExInGo/authentication"
 	handler "github.com/ashwinipatankar/JwtExInGo/handlers"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 //Struct Definitions
+/*
 type UserCredentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
-
+*/
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
@@ -35,10 +32,11 @@ type Response struct {
 	Data string `json:"data"`
 }
 
+/*
 type Token struct {
 	Token string `json:"token"`
 }
-
+*/
 type Person struct {
 	ID        string   `json:"id, omitempty"`
 	Firstname string   `json:"firstname , omitempty"`
@@ -53,20 +51,21 @@ type Address struct {
 
 var people []Person
 
+/*
 //App claims provide custom claim for JWt
 type AppClaims struct {
 	UserName string `json:"username"`
 	Role     string `json:"role"`
 	jwt.StandardClaims
 }
-
+*/
 //Server Entry Point
 func StartServer() {
 	r := mux.NewRouter()
 
 	//Public Endpoints
 	r.Handle("/", handler.GetLoginPageHandler).Methods("GET")
-	r.Handle("/login", LoginHandler).Methods("POST")
+	r.Handle("/login", handler.LoginHandler).Methods("POST")
 
 	//Protected Endpoints
 
@@ -146,6 +145,7 @@ var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.R
 	http.ServeFile(w, r, "login.html")
 })
 */
+/*
 var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	var user UserCredentials
@@ -190,7 +190,8 @@ var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)
 	JsonResponse(response, w)
 
 })
-
+*/
+/*
 //Helper Function
 func JsonResponse(response interface{}, w http.ResponseWriter) {
 	json, err := json.Marshal(response)
@@ -204,3 +205,4 @@ func JsonResponse(response interface{}, w http.ResponseWriter) {
 	w.Write(json)
 
 }
+*/
