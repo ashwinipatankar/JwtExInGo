@@ -15,12 +15,7 @@ import (
 )
 
 //Struct Definitions
-/*
-type UserCredentials struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-*/
+
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
@@ -32,11 +27,6 @@ type Response struct {
 	Data string `json:"data"`
 }
 
-/*
-type Token struct {
-	Token string `json:"token"`
-}
-*/
 type Person struct {
 	ID        string   `json:"id, omitempty"`
 	Firstname string   `json:"firstname , omitempty"`
@@ -51,14 +41,6 @@ type Address struct {
 
 var people []Person
 
-/*
-//App claims provide custom claim for JWt
-type AppClaims struct {
-	UserName string `json:"username"`
-	Role     string `json:"role"`
-	jwt.StandardClaims
-}
-*/
 //Server Entry Point
 func StartServer() {
 	r := mux.NewRouter()
@@ -139,70 +121,3 @@ var DeletePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r
 	}
 	json.NewEncoder(w).Encode(people)
 })
-
-/*
-var GetLoginPageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "login.html")
-})
-*/
-/*
-var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-	var user UserCredentials
-
-	//decode request into user credentials struct
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "Error in request")
-		return
-	}
-
-	fmt.Println(user.Username, user.Password)
-
-	//Validate user credentials
-	if strings.Compare(strings.ToLower(user.Username), "admin") != 0 {
-		if strings.Compare(user.Password, "password") != 0 {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Println("Error logging in")
-			fmt.Fprint(w, "Invalid credentials")
-			return
-		}
-	}
-
-	//Create claims
-	claims := AppClaims{user.Username, "Member", jwt.StandardClaims{
-		ExpiresAt: time.Now().Add(time.Minute * 20).Unix(),
-		Issuer:    "admin",
-	}}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	tokenString, err := token.SignedString(authentication.GetSignKey)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Error while signing the token")
-		log.Printf("Error Signing token %v\n", err)
-	}
-
-	//create a token instance using the token string
-	response := Token{tokenString}
-	JsonResponse(response, w)
-
-})
-*/
-/*
-//Helper Function
-func JsonResponse(response interface{}, w http.ResponseWriter) {
-	json, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(json)
-
-}
-*/
