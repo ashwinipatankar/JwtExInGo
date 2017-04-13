@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/ashwinipatankar/JwtExInGo/authentication"
+	"github.com/ashwinipatankar/JwtExInGo/data"
 	handler "github.com/ashwinipatankar/JwtExInGo/handlers"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -27,6 +28,7 @@ type Response struct {
 	Data string `json:"data"`
 }
 
+/*
 type Person struct {
 	ID        string   `json:"id, omitempty"`
 	Firstname string   `json:"firstname , omitempty"`
@@ -40,7 +42,7 @@ type Address struct {
 }
 
 var people []Person
-
+*/
 //Server Entry Point
 func StartServer() {
 	r := mux.NewRouter()
@@ -72,15 +74,18 @@ func StartServer() {
 	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 }
 
+/*
 func initData() {
 	people = append(people, Person{ID: "1", Firstname: "Ashwini", Lastname: "Patankar", Address: &Address{City: "Bangalore", State: "India"}})
 	people = append(people, Person{ID: "2", Firstname: "Manish", Lastname: "Patankar", Address: &Address{City: "San Fransico", State: "California"}})
 	people = append(people, Person{ID: "3", Firstname: "Hun", Lastname: "Patankar", Address: &Address{City: "Munich", State: "Germany"}})
 }
+*/
+var people []data.Person
 
 func main() {
 	authentication.InitKeys()
-	initData()
+	data.InitData(people)
 	StartServer()
 }
 
@@ -97,13 +102,13 @@ var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *h
 			return
 		}
 	}
-	json.NewEncoder(w).Encode(&Person{})
+	json.NewEncoder(w).Encode(&data.Person{})
 
 })
 
 var CreatePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	var person Person
+	var person data.Person
 	_ = json.NewDecoder(r.Body).Decode(&person)
 	person.ID = params["id"]
 	people = append(people, person)
