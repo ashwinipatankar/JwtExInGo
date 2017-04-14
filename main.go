@@ -74,13 +74,6 @@ func StartServer() {
 	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 }
 
-/*
-func initData() {
-	people = append(people, Person{ID: "1", Firstname: "Ashwini", Lastname: "Patankar", Address: &Address{City: "Bangalore", State: "India"}})
-	people = append(people, Person{ID: "2", Firstname: "Manish", Lastname: "Patankar", Address: &Address{City: "San Fransico", State: "California"}})
-	people = append(people, Person{ID: "3", Firstname: "Hun", Lastname: "Patankar", Address: &Address{City: "Munich", State: "Germany"}})
-}
-*/
 var people []data.Person
 
 func main() {
