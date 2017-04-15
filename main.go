@@ -28,21 +28,6 @@ type Response struct {
 	Data string `json:"data"`
 }
 
-/*
-type Person struct {
-	ID        string   `json:"id, omitempty"`
-	Firstname string   `json:"firstname , omitempty"`
-	Lastname  string   `json:"lastname, omitempty"`
-	Address   *Address `json:"address, omitempty"`
-}
-
-type Address struct {
-	City  string `json:"city, omitempty"`
-	State string `json:"state, omitempty"`
-}
-
-var people []Person
-*/
 //Server Entry Point
 func StartServer() {
 	r := mux.NewRouter()
@@ -53,7 +38,7 @@ func StartServer() {
 
 	//Protected Endpoints
 
-	r.Handle("/people", authentication.ValidateToken.Handler(GetPeopleEndPointHandler)).Methods("GET")
+	r.Handle("/people", authentication.ValidateToken.Handler(handler.GetPeopleEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", authentication.ValidateToken.Handler(GetPersonEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", authentication.ValidateToken.Handler(CreatePersonEndPointHandler)).Methods("POST")
 	r.Handle("/people/{id}", authentication.ValidateToken.Handler(DeletePersonEndPointHandler)).Methods("DELETE")
@@ -83,9 +68,6 @@ func main() {
 }
 
 //Endpoints
-var GetPeopleEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(people)
-})
 
 var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)

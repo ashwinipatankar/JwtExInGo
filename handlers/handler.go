@@ -90,3 +90,7 @@ func JsonResponse(response interface{}, w http.ResponseWriter) {
 	w.Write(json)
 
 }
+
+var GetPeopleEndPointHandler(people []data.Person) = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(people)
+})
