@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/ashwinipatankar/JwtExInGo/authentication"
+	"github.com/ashwinipatankar/JwtExInGo/data"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 )
 
 type UserCredentials struct {
@@ -91,6 +93,18 @@ func JsonResponse(response interface{}, w http.ResponseWriter) {
 
 }
 
-var GetPeopleEndPointHandler(people []data.Person) = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(people)
+var GetPeopleEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(data.people)
+})
+
+var GetPersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	for _, item := range people {
+		if item.ID == params["id"] {
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&data.Person{})
+
 })
