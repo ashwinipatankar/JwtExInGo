@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -40,8 +39,8 @@ func StartServer() {
 
 	r.Handle("/people", authentication.ValidateToken.Handler(handler.GetPeopleEndPointHandler)).Methods("GET")
 	r.Handle("/people/{id}", authentication.ValidateToken.Handler(handler.GetPersonEndPointHandler)).Methods("GET")
-	r.Handle("/people/{id}", authentication.ValidateToken.Handler(CreatePersonEndPointHandler)).Methods("POST")
-	r.Handle("/people/{id}", authentication.ValidateToken.Handler(DeletePersonEndPointHandler)).Methods("DELETE")
+	r.Handle("/people/{id}", authentication.ValidateToken.Handler(handler.CreatePersonEndPointHandler)).Methods("POST")
+	r.Handle("/people/{id}", authentication.ValidateToken.Handler(handler.DeletePersonEndPointHandler)).Methods("DELETE")
 
 	log.Println("Now listening...")
 
@@ -59,33 +58,10 @@ func StartServer() {
 	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 }
 
-var people []data.Person
-
 func main() {
 	authentication.InitKeys()
-	data.InitData(people)
+	data.InitData(data.GetPeople())
 	StartServer()
 }
 
 //Endpoints
-
-var CreatePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	var person data.Person
-	_ = json.NewDecoder(r.Body).Decode(&person)
-	person.ID = params["id"]
-	people = append(people, person)
-	json.NewEncoder(w).Encode(people)
-
-})
-
-var DeletePersonEndPointHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	for index, item := range people {
-		if item.ID == params["id"] {
-			people = append(people[:index], people[index+1:]...)
-			break
-		}
-	}
-	json.NewEncoder(w).Encode(people)
-})
