@@ -14,19 +14,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//Struct Definitions
-
-type User struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type Response struct {
-	Data string `json:"data"`
-}
-
 //Server Entry Point
 func StartServer() {
 	r := mux.NewRouter()
@@ -63,5 +50,3 @@ func main() {
 	data.InitData(data.GetPeople())
 	StartServer()
 }
-
-//Endpoints
