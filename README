@@ -9,7 +9,6 @@ References and Inspiration:
 Dependencies:
 1. go get github.com/dgrijalva/jwt-go ||Need to be replaced||
 2. go get github.com/gorilla/mux
-3. go get github.com/codegangsta/negroni
 4. go get github.com/gorilla/handlers
 5. go get github.com/auth0/go-jwt-middleware
 ToDo:
