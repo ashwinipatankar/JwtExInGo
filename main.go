@@ -9,6 +9,7 @@ import (
 
 	"github.com/ashwinipatankar/JwtExInGo/authentication"
 	"github.com/ashwinipatankar/JwtExInGo/data"
+	"github.com/ashwinipatankar/JwtExInGo/database"
 	handler "github.com/ashwinipatankar/JwtExInGo/handlers"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -46,6 +47,8 @@ func StartServer() {
 }
 
 func main() {
+	session := database.InitDatabase()
+	defer database.CloseDatabase(session)
 	authentication.InitKeys()
 	data.InitData(data.GetPeople())
 	StartServer()
